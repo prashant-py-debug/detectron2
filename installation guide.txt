@@ -1,0 +1,5 @@
+1. virtualenv -p <python executable >= 3.6> <env>
+2. pip install -r requirements.txt
+3. git clone https://github.com/facebookresearch/detectron2.git
+4. cd detectron2
+5. pip install -e .
