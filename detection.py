@@ -6,6 +6,7 @@ from detectron2 import model_zoo
 
 import cv2
 import numpy as np
+import time
 
 class Detector:
 	def __init__(self,model_type):
@@ -52,6 +53,14 @@ class Detector:
 	def on_Video(self,path):
 		cap = cv2.VideoCapture(path)
 
+		fps = cap.get(cv2.CAP_PROP_FPS)
+		print("Frames per second camera: {0}".format(fps))
+
+		# Number of frames to capture
+		num_frames = 1;
+
+		print("Capturing {0} frames".format(num_frames))
+
 		if(cap.isOpened() == False):
 			print("Error opening file.")
 			return
@@ -59,10 +68,13 @@ class Detector:
 		(success,image) = cap.read()
 
 		while success:
+
+			# Start time
+			start = time.time()
+
 			image = cv2.resize(image,(640,420), interpolation = cv2.INTER_AREA)
 			if self.model_type != "PS":
 				predictions = self.predictor(image)
-
 
 				viz = Visualizer(image[:,:,::-1] , metadata = MetadataCatalog.get(self.cfg.DATASETS.TRAIN
 					[0]), instance_mode = ColorMode.SEGMENTATION)
@@ -75,12 +87,24 @@ class Detector:
 					[0]))
 				output = viz.draw_panoptic_seg_predictions(predictions.to("cpu"),segmentinfo)
 
+			end = time.time()
+
+			# Time elapsed
+			seconds = end - start
+			#print ("Time taken : {0} seconds".format(seconds))
+
+			# Calculate frames per second
+			fps  = num_frames / seconds
+			print(fps)
+
+			cv2.putText(output.get_image()[:,:,::-1], "FPS: " + str(round(fps)), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255,255,255))
+
 			cv2.imshow("Result",output.get_image()[:,:,::-1])
 
-			key = cv2.waitKey(1) & 0xff
-			if key == ord("q"):
+			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
-			(success,image) = cap.read()
+		capture.release()
+		cv2.destroyAllWindows()
 
 
 
